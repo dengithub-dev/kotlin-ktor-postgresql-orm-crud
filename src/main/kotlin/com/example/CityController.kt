@@ -7,7 +7,7 @@ import com.example.City
 
 class CityService(private val connection: Connection) {
     companion object {
-        private const val CHECKCITIESTABLEIFEXISTSORNOT = "SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'cities');"
+        private const val CHECK_TABLE_IF_EXISTS_OR_NOT = "SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'cities');"
         private const val CREATE_TABLE_CITIES = "CREATE TABLE CITIES (ID SERIAL PRIMARY KEY, NAME VARCHAR(255), POPULATION INT);"
         private const val SELECT_CITY_ALL = "SELECT name, population FROM cities;"
         private const val SELECT_CITY_BY_ID = "SELECT name, population FROM cities WHERE id = ?"
@@ -20,12 +20,20 @@ class CityService(private val connection: Connection) {
     // Enable this if CITIES table does not exist yet
     init {
         val statement = connection.createStatement()
-        val checkStatement = statement.executeQuery(CHECKCITIESTABLEIFEXISTSORNOT)
+        val checkStatement = statement.executeQuery(CHECK_TABLE_IF_EXISTS_OR_NOT)
         if (checkStatement.next()) {
-            val checkstatementresult = checkStatement.getString("exists") // value is t for true, f for false
+            // Traditional conditional statement
+            //val checkstatementresult = checkStatement.getString("exists") // value is t for true, f for false
             // create a condition if a table does not exist, create one
-            if (checkstatementresult.toString() == "f") {
+            /*if (checkstatementresult.toString() == "f") {
                 statement.executeUpdate(CREATE_TABLE_CITIES)
+            }*/
+
+            // Functional conditional statement
+            checkStatement.getString("exists").also {
+                if (it.toString() == "f") {
+                    statement.executeUpdate(CREATE_TABLE_CITIES)
+                }
             }
         }
     }
